@@ -6,7 +6,7 @@ import time
 class tetris_game:
 
     tetris_map = np.zeros((10,20), dtype=np.int8)
-    speedLevel = [1.50, 1.40, 1.30, 1.20, 1.10, 1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05]
+    speedLevel = [1.50, 1.30, 1.10, 0.9, 0.7, 0.5, 0.3, 0.1, 0.025]
     x_ray = False
     character_tetris = [".", "█", "█"]
 
@@ -34,11 +34,11 @@ class tetris_game:
         curses.napms(0)
     
     def clearPiece(self, piece_data):
-        for x in range(6):
-            for y in range(6):
+        for x in range(10):
+            for y in range(10):
                 try:
-                    if(self.tetris_map[piece_data["posX"]+x][piece_data["posY"]+y] == 1):
-                        self.tetris_map[piece_data["posX"]+x][piece_data["posY"]+y] = 0
+                    if(self.tetris_map[piece_data["posX"]+x-5][piece_data["posY"]+y-5] == 1):
+                        self.tetris_map[piece_data["posX"]+x-5][piece_data["posY"]+y-5] = 0
                 except:
                     continue
 
@@ -59,15 +59,18 @@ class tetris_game:
     def collisionPiece(self, key, piece, piece_data):
         collision = False
         for location in piece:
-            if(key == ord('d')):
-                if(piece_data["posX"]+location[0]+1 > 9 or self.tetris_map[piece_data["posX"]+location[0]+1][piece_data["posY"]+location[1]] > 1):
-                    collision = True
-            elif(key == ord('a')):
-                if(piece_data["posX"]+location[0]-1 < 0 or self.tetris_map[piece_data["posX"]+location[0]-1][piece_data["posY"]+location[1]] > 1):
-                    collision = True
-            elif(key == ord('s')):
-                if(piece_data["posY"]+location[1]+1 > 19 or self.tetris_map[piece_data["posX"]+location[0]][piece_data["posY"]+location[1]+1] > 1):
-                    collision = True
+            try:
+                if(key == ord('d')):
+                    if(piece_data["posX"]+location[0]+1 > 9 or self.tetris_map[piece_data["posX"]+location[0]+1][piece_data["posY"]+location[1]] > 1):
+                        collision = True
+                elif(key == ord('a')):
+                    if(piece_data["posX"]+location[0]-1 < 0 or self.tetris_map[piece_data["posX"]+location[0]-1][piece_data["posY"]+location[1]] > 1):
+                        collision = True
+                elif(key == ord('s')):
+                    if(piece_data["posY"]+location[1]+1 > 19 or self.tetris_map[piece_data["posX"]+location[0]][piece_data["posY"]+location[1]+1] > 1):
+                        collision = True
+            except:
+                continue
         return collision
     
     def collisionRotation(self, piece, piece_data):
@@ -382,7 +385,7 @@ my_window = curses.newwin(200,200,0,0)
 my_window.nodelay(True)
 
 pieces = Pieces()
-tetris = tetris_game(0, "player", my_window, 15)
+tetris = tetris_game(0, "player", my_window, 7)
 
 pieces.getPiece(np.random.randint(0,7))
 #pieces.getPiece(1)
@@ -396,16 +399,13 @@ while(key != ord('q')):
     pieces.updatePiece()
     
     key = my_window.getch()
+    while key == KeyError:
+        key = my_window.getch()
+
     if(key == ord('k')):
         tetris.x_ray_mode()
     if(key == ord('w')):
         pieces.rotationPiece()
-        
-
-        """if(tetris.colisionPieceRight(pieces.piece_actual,pieces.piece_data)):
-            pieces.piece_data["posX"] -= 1
-        if(tetris.colisionPieceLeft(pieces.piece_actual,pieces.piece_data)):
-            pieces.piece_data["posX"] += 1"""
     if(key == ord('d')):
         if(not tetris.collisionPiece(key, pieces.piece_actual,pieces.piece_data)):
             pieces.movePiece(+1,0)
@@ -415,6 +415,9 @@ while(key != ord('q')):
     if(key == ord('s')):
         if(not tetris.collisionPiece(key, pieces.piece_actual, pieces.piece_data)):
             pieces.movePiece(0,+1)
+
+    while key != KeyError:
+        break
 
     timems_now = time.time()*1000.0
     timeper = timems_now - timems_old
@@ -436,16 +439,6 @@ while(key != ord('q')):
         else:
             tetris.staticPiece(pieces.piece_actual, pieces.piece_data)
             pieces.getPiece(np.random.randint(0,7))
-
-        """if(pieces.piece_data["posY"] < 21 and tetris.colisionPieceDown(pieces.piece_actual, pieces.piece_data) == False):
-            pieces.movePiece(0,1)"""
-        """else:
-            tetris.staticPiece(pieces.piece_actual, pieces.piece_data)
-            tetris.clearLine(tetris.ClearLineIdentifity())
-            pieces.piece_actual = 0"""
-
-    """if(pieces.piece_actual == 0):
-        pieces.getPiece(np.random.randint(0,7))"""
     
     tetris.clearLine(tetris.ClearLineIdentifity())
     tetris.setPiece(pieces.piece_actual, pieces.piece_data)
